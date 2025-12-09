@@ -11,6 +11,7 @@ import TanStackQueryDevtools from "../lib/tanstack-query/devtools";
 import appCss from "../styles.css?url";
 
 import type { QueryClient } from "@tanstack/react-query";
+import { ThemeProvider } from "@/components/ui/theme-provider";
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -48,7 +49,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
         <TanStackDevtools
           config={{
             position: "bottom-right",

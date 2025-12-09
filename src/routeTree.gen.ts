@@ -10,33 +10,51 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OrgTeamTeamRouteRouteImport } from './routes/$org/team/$team/route'
+import { Route as OrgTeamTeamIndexRouteImport } from './routes/$org/team/$team/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrgTeamTeamRouteRoute = OrgTeamTeamRouteRouteImport.update({
+  id: '/$org/team/$team',
+  path: '/$org/team/$team',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgTeamTeamIndexRoute = OrgTeamTeamIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OrgTeamTeamRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$org/team/$team': typeof OrgTeamTeamRouteRouteWithChildren
+  '/$org/team/$team/': typeof OrgTeamTeamIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$org/team/$team': typeof OrgTeamTeamIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$org/team/$team': typeof OrgTeamTeamRouteRouteWithChildren
+  '/$org/team/$team/': typeof OrgTeamTeamIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/$org/team/$team' | '/$org/team/$team/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/$org/team/$team'
+  id: '__root__' | '/' | '/$org/team/$team' | '/$org/team/$team/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  OrgTeamTeamRouteRoute: typeof OrgTeamTeamRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +66,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$org/team/$team': {
+      id: '/$org/team/$team'
+      path: '/$org/team/$team'
+      fullPath: '/$org/team/$team'
+      preLoaderRoute: typeof OrgTeamTeamRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$org/team/$team/': {
+      id: '/$org/team/$team/'
+      path: '/'
+      fullPath: '/$org/team/$team/'
+      preLoaderRoute: typeof OrgTeamTeamIndexRouteImport
+      parentRoute: typeof OrgTeamTeamRouteRoute
+    }
   }
 }
 
+interface OrgTeamTeamRouteRouteChildren {
+  OrgTeamTeamIndexRoute: typeof OrgTeamTeamIndexRoute
+}
+
+const OrgTeamTeamRouteRouteChildren: OrgTeamTeamRouteRouteChildren = {
+  OrgTeamTeamIndexRoute: OrgTeamTeamIndexRoute,
+}
+
+const OrgTeamTeamRouteRouteWithChildren =
+  OrgTeamTeamRouteRoute._addFileChildren(OrgTeamTeamRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  OrgTeamTeamRouteRoute: OrgTeamTeamRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
