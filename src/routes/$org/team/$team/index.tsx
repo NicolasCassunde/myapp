@@ -3,6 +3,8 @@
 import { AppSidebar } from "@/components/core/app-sidebar";
 import { HeaderActions } from "@/components/core/header-actions";
 import { HeaderBreadcrumb } from "@/components/core/header-breadcrumb";
+import { KanbanView } from "@/components/core/kanban-view";
+import { ListView } from "@/components/core/list-view";
 import { RightSidebarContent } from "@/components/core/right-sidebar-content";
 import { cn } from "@/lib/utils";
 import { createFileRoute, redirect } from "@tanstack/react-router";
@@ -38,11 +40,7 @@ function RouteComponent() {
                   isSidebarOpen && "md:mr-[440px] mr-[380px]",
                 )}
               >
-                {displayMode === "list" ? (
-                  <span>list</span>
-                ) : (
-                  <span>kanban</span>
-                )}
+                {displayMode === "list" ? <ListView /> : <KanbanView />}
               </div>
               <AnimatePresence mode="popLayout">
                 {isSidebarOpen && <RightSidebarContent />}
