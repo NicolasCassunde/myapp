@@ -1,12 +1,12 @@
 import { cn } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import * as z from "zod";
-import { useNavigate } from "@tanstack/react-router";
+import { redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { TextMorph } from "../ui/text-morph";
 import { Input } from "../ui/input";
 import { nanoid } from "nanoid";
-import { createOrganizationWithDefaults } from "@/lib/create-default-resources";
+import { createWorkspaceWithDefaults } from "@/lib/create-default-resources";
 
 const formSchema = z.object({
   name: z.string().min(1, "Workspace name is required"),
@@ -26,7 +26,15 @@ export function OrganizationForm({ userId }: { userId: string }) {
     onSubmit: async ({ value }) => {
       try {
         setIsSubmitting(true);
-        await createOrganizationWithDefaults(value.name, userId);
+        const data = await createWorkspaceWithDefaults(value.name, userId);
+
+        await navigate({
+          to: "/$org/team/$team",
+          params: {
+            org: data.workspaceSlug,
+            team: data.teamKey,
+          },
+        });
       } catch (error) {
         console.error("Error creating organization:", error);
       } finally {

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db/db";
-import { insertTaskLabelSchema, taskLabel } from "@/lib/db/schema";
+import { insertTaskLabelSchema, task_label } from "@/lib/db/schema";
 
 import { createServerFn } from "@tanstack/react-start";
 import { eq, sql } from "drizzle-orm";
@@ -7,12 +7,11 @@ export const createTaskLabelServerFn = createServerFn({ method: "POST" })
   .inputValidator(insertTaskLabelSchema)
   .handler(async ({ data }) => {
     const result = await db.transaction(async (tx) => {
-      await tx.insert(taskLabel).values({
+      await tx.insert(task_label).values({
         id: data.id,
         name: data.name,
         color: data.color,
-        workspaceId: data.workspaceId,
-        createdAt: data.createdAt,
+        workspace_id: data.workspace_id,
       });
 
       const txidResult = await tx.execute<{ txid: string }>(
@@ -31,9 +30,9 @@ export const updateTaskLabelServerFn = createServerFn({ method: "POST" })
       delete updateData.id;
 
       await tx
-        .update(taskLabel)
+        .update(task_label)
         .set(updateData)
-        .where(eq(taskLabel.id, data.id));
+        .where(eq(task_label.id, data.id));
 
       const txidResult = await tx.execute<{ txid: string }>(
         sql`SELECT txid_current()::text as txid`,
@@ -47,7 +46,7 @@ export const deleteTaskLabelServerFn = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }) => {
     const result = await db.transaction(async (tx) => {
-      await tx.delete(taskLabel).where(eq(taskLabel.id, data.id));
+      await tx.delete(task_label).where(eq(task_label.id, data.id));
 
       const txidResult = await tx.execute<{ txid: string }>(
         sql`SELECT txid_current()::text as txid`,

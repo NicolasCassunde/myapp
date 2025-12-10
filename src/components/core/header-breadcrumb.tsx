@@ -12,6 +12,8 @@ import { SidebarTrigger, useSidebar } from "../ui/sidebar";
 import { Button, buttonVariants } from "../ui/button";
 import { RightSidebarTrigger } from "./right-sidebar-trigger";
 import { ModeToggle } from "../ui/mode-toggle";
+import { useActiveOrgAndTeam } from "@/data/live-queries/currentOrganization";
+import { Route } from "@/routes/$org/team/$team/";
 
 interface HeaderBreadcrumbProps {
   showRightItems?: boolean;
@@ -25,6 +27,17 @@ export function HeaderBreadcrumb({
   setIsSidebarOpen,
 }: HeaderBreadcrumbProps) {
   const { open: sidebarOpen, isMobile } = useSidebar();
+  const { org, team } = Route.useParams();
+  const { session } = Route.useRouteContext();
+
+  const { data: activeOrganization, isLoading: isLoadingOrganization } =
+    useActiveOrgAndTeam({
+      organizationSlug: org,
+      teamKey: team,
+      userId: session?.user.id,
+    });
+
+  if (isLoadingOrganization) return <div>Loading...</div>;
 
   return (
     <header
@@ -51,7 +64,9 @@ export function HeaderBreadcrumb({
                   }),
                 )}
               >
-                <p className="truncate max-w-20 sm:max-w-full">Nicolas</p>
+                <p className="truncate max-w-20 sm:max-w-full">
+                  {activeOrganization[0].activeOrganization?.name}
+                </p>
               </BreadcrumbPage>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
@@ -64,7 +79,9 @@ export function HeaderBreadcrumb({
                   }),
                 )}
               >
-                <p className="truncate max-w-20 sm:max-w-full">team</p>
+                <p className="truncate max-w-20 sm:max-w-full">
+                  {activeOrganization[0].activeTeam?.name}
+                </p>
               </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>

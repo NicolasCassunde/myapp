@@ -14,9 +14,7 @@ export const createColumnServerFn = createServerFn({ method: "POST" })
         position: data.position,
         color: data.color || null,
         type: data.type,
-        teamId: data.teamId,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
+        team_id: data.team_id,
       });
 
       const txidResult = await tx.execute<{ txid: string }>(

@@ -1,40 +1,34 @@
 import { nanoid } from "nanoid";
 import {
   columnCollection,
-  organizationCollection,
-  organizationUserCollection,
   taskCollection,
   teamCollection,
   teamMemberCollection,
   userCollection,
   workspaceCollection,
+  workspaceUserCollection,
 } from "./collections";
 
-/**
- * Gera uma key para o team baseada no nome da organização
- * Ex: "Botafogo" -> "BOT", "Linear" -> "LIN"
- */
 function generateTeamKey(name: string): string {
   const cleaned = name.toUpperCase().replace(/[^A-Z0-9]/g, "");
   return cleaned.substring(0, 3).padEnd(3, "X");
 }
 
-export async function createOrganizationWithDefaults(
-  organizationName: string,
+export async function createWorkspaceWithDefaults(
+  workspaceName: string,
   userId: string,
 ) {
-  const orgId = nanoid();
   const workspaceId = nanoid();
   const teamId = nanoid();
-  const orgUserId = nanoid();
+  const workspaceUserId = nanoid();
   const teamMemberId = nanoid();
 
-  const slug = organizationName
+  const slug = workspaceName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
-  const teamKey = generateTeamKey(organizationName);
+  const teamKey = generateTeamKey(workspaceName);
 
   const columnIds = {
     backlog: nanoid(),
@@ -45,75 +39,65 @@ export async function createOrganizationWithDefaults(
 
   const taskId = nanoid();
 
-  // 1. Organization
-  const orgMutation = organizationCollection.insert({
-    id: orgId,
-    name: organizationName,
-    slug,
-    logo: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  await orgMutation.isPersisted.promise;
-
-  // 2. Organization User
-  const orgUserMutation = organizationUserCollection.insert({
-    id: orgUserId,
-    userId,
-    organizationId: orgId,
-    role: "owner",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  await orgUserMutation.isPersisted.promise;
-
-  // 3. Workspace
+  // 1. Workspace
   const workspaceMutation = workspaceCollection.insert({
     id: workspaceId,
-    name: organizationName,
-    urlKey: slug,
-    previousUrlKeys: [],
+    name: workspaceName,
+    slug,
+    url_key: slug,
+    previous_url_keys: [],
     icon: null,
     color: "#3b82f6",
-    organizationId: orgId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    logo: null,
+    created_at: new Date(),
+    updated_at: new Date(),
   });
   await workspaceMutation.isPersisted.promise;
 
-  // 4. Team
+  // 2. Workspace User (owner)
+  const workspaceUserMutation = workspaceUserCollection.insert({
+    id: workspaceUserId,
+    user_id: userId,
+    workspace_id: workspaceId,
+    role: "owner",
+    created_at: new Date(),
+    updated_at: new Date(),
+  });
+  await workspaceUserMutation.isPersisted.promise;
+
+  // 3. Team
   const teamMutation = teamCollection.insert({
     id: teamId,
-    name: organizationName,
+    name: workspaceName,
     key: teamKey,
     description: "Default team for general tasks",
     icon: "🚀",
     color: "#3b82f6",
-    workspaceId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    workspace_id: workspaceId,
+    created_at: new Date(),
+    updated_at: new Date(),
   });
   await teamMutation.isPersisted.promise;
 
-  // 5. Team Member
+  // 4. Team Member
   const teamMemberMutation = teamMemberCollection.insert({
     id: teamMemberId,
-    userId,
-    teamId,
-    createdAt: new Date(),
+    user_id: userId,
+    team_id: teamId,
+    created_at: new Date(),
   });
   await teamMemberMutation.isPersisted.promise;
 
-  // 6. Columns
+  // 5. Columns
   const backlogMutation = columnCollection.insert({
     id: columnIds.backlog,
     name: "Backlog",
     position: 0,
     color: "#6b7280",
     type: "backlog",
-    teamId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    team_id: teamId,
+    created_at: new Date(),
+    updated_at: new Date(),
   });
   await backlogMutation.isPersisted.promise;
 
@@ -123,9 +107,9 @@ export async function createOrganizationWithDefaults(
     position: 1,
     color: "#3b82f6",
     type: "unstarted",
-    teamId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    team_id: teamId,
+    created_at: new Date(),
+    updated_at: new Date(),
   });
   await todoMutation.isPersisted.promise;
 
@@ -135,9 +119,9 @@ export async function createOrganizationWithDefaults(
     position: 2,
     color: "#f59e0b",
     type: "started",
-    teamId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    team_id: teamId,
+    created_at: new Date(),
+    updated_at: new Date(),
   });
   await inProgressMutation.isPersisted.promise;
 
@@ -147,13 +131,13 @@ export async function createOrganizationWithDefaults(
     position: 3,
     color: "#10b981",
     type: "completed",
-    teamId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    team_id: teamId,
+    created_at: new Date(),
+    updated_at: new Date(),
   });
   await doneMutation.isPersisted.promise;
 
-  // 7. Welcome Task
+  // 6. Welcome Task
   const taskMutation = taskCollection.insert({
     id: taskId,
     identifier: `${teamKey}-1`,
@@ -169,31 +153,36 @@ Here are some things you can do:
 Feel free to edit or delete this task!`,
     priority: 0,
     position: 0,
-    estimatePoints: null,
-    dueDate: null,
-    startedAt: null,
-    completedAt: null,
-    canceledAt: null,
-    teamId,
-    columnId: columnIds.todo,
-    assigneeId: userId,
-    creatorId: userId,
-    parentTaskId: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    estimate_points: null,
+    due_date: null,
+    started_at: null,
+    completed_at: null,
+    canceled_at: null,
+    team_id: teamId,
+    column_id: columnIds.todo,
+    assignee_id: userId,
+    creator_id: userId,
+    parent_task_id: null,
+    created_at: new Date(),
+    updated_at: new Date(),
   });
   await taskMutation.isPersisted.promise;
 
-  // 8. Update User
-  const userMutation = userCollection.update(userId, (draft) => {
-    draft.activeOrganizationId = orgId;
-  });
-  await userMutation.isPersisted.promise;
+  // // 7. Update User
+  // const userMutation = userCollection.update(userId, (draft) => {
+  //   draft.activeWorkspaceId = workspaceId;
+  // });
+  // await userMutation.isPersisted.promise;
 
   return {
-    organizationId: orgId,
     workspaceId,
+    workspaceSlug: slug,
+    workspaceName,
     teamId,
-    slug,
+    teamKey,
+    teamName: workspaceName,
+    userId,
+    workspaceUserId,
+    teamMemberId,
   };
 }

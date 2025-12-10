@@ -27,6 +27,15 @@ import {
 // import { H1, H2, H3, P } from "./typography";
 
 import { OrganizationSwitcher } from "./organization-switcher";
+import { InferSelectModel } from "drizzle-orm";
+import {
+  workspaceCollection,
+  workspaceUserCollection,
+} from "@/lib/collections";
+import { workspace, workspace_user } from "@/lib/db/schema";
+
+import { useTeamsOfOrganization } from "@/data/live-queries/use-teams-organization";
+import { Route } from "@/routes/$org/team/$team/route";
 
 // Menu items.
 const items = [
@@ -57,13 +66,20 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ userId }: { userId: string }) {
   const { isMobile } = useSidebar();
+  const { org } = Route.useParams();
+
+  const { data, isLoading } = useTeamsOfOrganization({
+    workspaceSlug: org,
+  });
+
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <Sidebar>
       <SidebarHeader className="group flex-row flex items-center justify-between border-b">
-        <OrganizationSwitcher />
+        <OrganizationSwitcher userId={userId} />
         {!isMobile && <SidebarTrigger className="" />}
       </SidebarHeader>
       <SidebarContent>
@@ -84,12 +100,12 @@ export function AppSidebar() {
           </div>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {data.map((item) => (
+                <SidebarMenuItem key={item.team?.id}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
+                    <a href={item.team?.key}>
+                      {/*<item.icon />*/}
+                      <span>{item.team?.name}</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

@@ -32,9 +32,26 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { useAllOrganizations } from "@/data/live-queries/all-organizations";
+import { Route } from "@/routes/$org/team/$team/route";
+import { useActiveOrgAndTeam } from "@/data/live-queries/currentOrganization";
 
-export function OrganizationSwitcher() {
+export function OrganizationSwitcher({ userId }: { userId: string }) {
   const [open, setOpen] = React.useState(false);
+  const { org, team } = Route.useParams();
+  const navigate = useNavigate();
+  const { data: organizations } = useAllOrganizations({
+    userId,
+  });
+
+  const { data: activeOrgAndTeam, isLoading: isLoadingOrganization } =
+    useActiveOrgAndTeam({
+      organizationSlug: org,
+      teamKey: team,
+      userId: userId,
+    });
+
+  if (isLoadingOrganization) return <div>Loading...</div>;
 
   return (
     <SidebarMenu>
@@ -48,10 +65,12 @@ export function OrganizationSwitcher() {
             >
               <div className="flex items-center gap-2">
                 <div className="flex size-5 items-center justify-center rounded-md bg-accent text-xs font-semibold text-muted-foreground">
-                  N
+                  {activeOrgAndTeam[0].activeOrganization?.name
+                    .charAt(0)
+                    .toUpperCase()}
                 </div>
                 <span className="truncate text-sm font-medium text-foreground">
-                  Nicolas
+                  {activeOrgAndTeam[0].activeOrganization?.name}
                 </span>
               </div>
 
@@ -88,26 +107,29 @@ export function OrganizationSwitcher() {
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent className="w-50">
-                    <DropdownMenuItem
-                      // key={org.id}
-                      className={cn(
-                        "flex items-center justify-between cursor-pointer",
-                        // isActive && "font-medium text-primary",
-                        // isNavigating && "opacity-50 cursor-wait",
-                      )}
-                      // disabled={isNavigating}
-                      // onClick={() => handleOrgSwitch(org.slug)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-accent rounded-sm flex items-center mx-auto justify-center text-xs font-semibold">
-                          N
-                        </div>
-                        <span>Nicolas</span>
-                      </div>
-                      {/*{isActive && (
-                        <CheckIcon className="size-4 text-primary" />
-                      )}*/}
-                    </DropdownMenuItem>
+                    {organizations?.map((orgItem) => (
+                      <DropdownMenuItem
+                        key={orgItem.workspace?.id}
+                        onSelect={() => {
+                          const urlKey = orgItem.workspace?.url_key;
+                          if (!urlKey) return;
+
+                          const team = urlKey.slice(0, 3).toUpperCase();
+
+                          navigate({
+                            to: "/$org/team/$team",
+                            params: {
+                              org: orgItem.workspace!.slug,
+                              team,
+                            },
+                          });
+                        }}
+                      >
+                        <span className="truncate">
+                          {orgItem.workspace?.name}
+                        </span>
+                      </DropdownMenuItem>
+                    ))}
 
                     <DropdownMenuSeparator />
 

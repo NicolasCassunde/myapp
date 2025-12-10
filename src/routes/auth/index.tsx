@@ -8,7 +8,7 @@ export const Route = createFileRoute("/auth/")({
 function RouteComponent() {
   async function login() {
     await authClient.signIn.magicLink({
-      email: "neocassunde@gmail.com",
+      email: "neo1@gmail.com",
       newUserCallbackURL: "/",
       name: "Neo",
     });

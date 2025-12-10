@@ -2,8 +2,6 @@ import { createCollection } from "@tanstack/react-db";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import {
   Column,
-  Organization,
-  OrganizationUser,
   Task,
   TaskLabel,
   TaskLabelAssignment,
@@ -11,21 +9,19 @@ import {
   TeamMember,
   User,
   Workspace,
+  WorkspaceUser,
 } from "./db/schema";
 import { updateUserServerFn } from "@/data/mutations/user";
 import {
-  createOrganizationServerFn,
-  deleteOrganizationServerFn,
-  updateOrganizationServerFn,
-} from "@/data/mutations/organization";
-import {
-  createOrganizationUserServerFn,
-  updateOrganizationUserServerFn,
-} from "@/data/mutations/organization-user";
-import {
   createWorkspaceServerFn,
   updateWorkspaceServerFn,
+  deleteWorkspaceServerFn,
 } from "@/data/mutations/workspace";
+import {
+  createWorkspaceUserServerFn,
+  updateWorkspaceUserServerFn,
+  deleteWorkspaceUserServerFn,
+} from "@/data/mutations/workspace-user";
 import { createTeamServerFn } from "@/data/mutations/team";
 import { createTeamMemberServerFn } from "@/data/mutations/team-member";
 import { createColumnServerFn } from "@/data/mutations/column";
@@ -44,60 +40,20 @@ export const userCollection = createCollection(
       params: { table: "user" },
     },
     getKey: (item) => item.id,
-    onUpdate: async ({ transaction }) => {
-      const modified = transaction.mutations[0].modified;
-      await updateUserServerFn({
-        data: modified,
-      });
-    },
-  }),
-);
-
-export const organizationCollection = createCollection(
-  electricCollectionOptions<Organization>({
-    id: "organizations",
-    shapeOptions: {
-      url: ELECTRIC_URL,
-      params: { table: "organization" },
-    },
-    getKey: (item) => item.id,
-    onInsert: async ({ transaction }) => {
-      const data = transaction.mutations[0].modified;
-      await createOrganizationServerFn({ data });
-    },
-    onUpdate: async ({ transaction }) => {
-      const modified = transaction.mutations[0].modified;
-      await updateOrganizationServerFn({
-        data: modified,
-      });
-    },
-    // onDelete: async ({ transaction }) => {
-    //   const id = transaction.mutations[0].original?.id;
-    //   if (id) await deleteOrganizationServerFn({ id });
-    // },
-  }),
-);
-
-export const organizationUserCollection = createCollection(
-  electricCollectionOptions<OrganizationUser>({
-    id: "organization-users",
-    shapeOptions: {
-      url: ELECTRIC_URL,
-      params: { table: "organization_user" },
-    },
-    getKey: (item) => item.id,
-    onInsert: async ({ transaction }) => {
-      const data = transaction.mutations[0].modified;
-      await createOrganizationUserServerFn({ data });
-    },
     // onUpdate: async ({ transaction }) => {
-    //   const modified = transaction.mutations[0]
-    //     .modified as Partial<OrganizationUser>;
-    //   await updateOrganizationUserServerFn({ data: modified });
-    // },
-    // onDelete: async ({ transaction }) => {
-    //   const id = transaction.mutations[0].original?.id;
-    //   if (id) await deleteOrganizationUserServerFn({ id });
+    //   const modified = transaction.mutations[0].modified as Partial<User>;
+    //   await updateUserServerFn({
+    //     data: {
+    //       id: modified.id!,
+    //       activeWorkspaceId: modified.activeWorkspaceId,
+    //       createdAt: modified.createdAt,
+    //       updatedAt: modified.updatedAt,
+    //       email: modified.email!,
+    //       image: modified.image,
+    //       emailVerified: modified.emailVerified,
+    //       name: modified.name!,
+    //     },
+    //   });
     // },
   }),
 );
@@ -114,14 +70,46 @@ export const workspaceCollection = createCollection(
       const data = transaction.mutations[0].modified;
       await createWorkspaceServerFn({ data });
     },
-    // onUpdate: async ({ transaction }) => {
-    //   const modified = transaction.mutations[0].modified as Partial<Workspace>;
-    //   await updateWorkspaceServerFn({ data: modified });
-    // },
-    // onDelete: async ({ transaction }) => {
-    //   const id = transaction.mutations[0].original?.id;
-    //   if (id) await deleteWorkspaceServerFn({ id });
-    // },
+    onUpdate: async ({ transaction }) => {
+      const modified = transaction.mutations[0].modified as Partial<Workspace>;
+      await updateWorkspaceServerFn({
+        data: {
+          id: modified.id!,
+        },
+      });
+    },
+    onDelete: async ({ transaction }) => {
+      const id = transaction.mutations[0].original?.id;
+      if (id) await deleteWorkspaceServerFn({ data: { id } });
+    },
+  }),
+);
+
+export const workspaceUserCollection = createCollection(
+  electricCollectionOptions<WorkspaceUser>({
+    id: "workspace-users",
+    shapeOptions: {
+      url: ELECTRIC_URL,
+      params: { table: "workspace_user" },
+    },
+    getKey: (item) => item.id,
+    onInsert: async ({ transaction }) => {
+      const data = transaction.mutations[0].modified;
+      await createWorkspaceUserServerFn({ data });
+    },
+    onUpdate: async ({ transaction }) => {
+      const modified = transaction.mutations[0]
+        .modified as Partial<WorkspaceUser>;
+      await updateWorkspaceUserServerFn({
+        data: {
+          id: modified.id!,
+        },
+      });
+    },
+    onDelete: async ({ transaction }) => {
+      const id = transaction.mutations[0].original?.id;
+      if (id) await deleteWorkspaceUserServerFn({ data: { id } });
+    },
   }),
 );
 
@@ -143,7 +131,7 @@ export const teamCollection = createCollection(
     // },
     // onDelete: async ({ transaction }) => {
     //   const id = transaction.mutations[0].original?.id;
-    //   if (id) await deleteTeamServerFn({ id });
+    //   if (id) await deleteTeamServerFn({ data: { id } });
     // },
   }),
 );
@@ -162,7 +150,7 @@ export const teamMemberCollection = createCollection(
     },
     // onDelete: async ({ transaction }) => {
     //   const id = transaction.mutations[0].original?.id;
-    //   if (id) await deleteTeamMemberServerFn({ id });
+    //   if (id) await deleteTeamMemberServerFn({ data: { id } });
     // },
   }),
 );
@@ -185,7 +173,7 @@ export const columnCollection = createCollection(
     // },
     // onDelete: async ({ transaction }) => {
     //   const id = transaction.mutations[0].original?.id;
-    //   if (id) await deleteColumnServerFn({ id });
+    //   if (id) await deleteColumnServerFn({ data: { id } });
     // },
   }),
 );
@@ -208,7 +196,7 @@ export const taskCollection = createCollection(
     // },
     // onDelete: async ({ transaction }) => {
     //   const id = transaction.mutations[0].original?.id;
-    //   if (id) await deleteTaskServerFn({ id });
+    //   if (id) await deleteTaskServerFn({ data: { id } });
     // },
   }),
 );
@@ -231,7 +219,7 @@ export const taskLabelCollection = createCollection(
     // },
     // onDelete: async ({ transaction }) => {
     //   const id = transaction.mutations[0].original?.id;
-    //   if (id) await deleteTaskLabelServerFn({ id });
+    //   if (id) await deleteTaskLabelServerFn({ data: { id } });
     // },
   }),
 );
@@ -250,16 +238,15 @@ export const taskLabelAssignmentCollection = createCollection(
     },
     // onDelete: async ({ transaction }) => {
     //   const id = transaction.mutations[0].original?.id;
-    //   if (id) await deleteTaskLabelAssignmentServerFn({ id });
+    //   if (id) await deleteTaskLabelAssignmentServerFn({ data: { id } });
     // },
   }),
 );
 
 export const collections = {
   users: userCollection,
-  organizations: organizationCollection,
-  organizationUsers: organizationUserCollection,
   workspaces: workspaceCollection,
+  workspaceUsers: workspaceUserCollection,
   teams: teamCollection,
   teamMembers: teamMemberCollection,
   columns: columnCollection,

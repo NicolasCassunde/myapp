@@ -14,9 +14,9 @@ export const createTeamServerFn = createServerFn({ method: "POST" })
         description: data.description || null,
         icon: data.icon || null,
         color: data.color || null,
-        workspaceId: data.workspaceId,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
+        workspace_id: data.workspace_id,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
       });
 
       const txidResult = await tx.execute<{ txid: string }>(

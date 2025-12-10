@@ -5,6 +5,9 @@ import { HeaderBreadcrumb } from "@/components/core/header-breadcrumb";
 import { KanbanView } from "@/components/core/kanban-view";
 import { ListView } from "@/components/core/list-view";
 import { RightSidebarContent } from "@/components/core/right-sidebar-content";
+import { getSessionFn } from "@/data/getSessionFn";
+
+import { useTeamPage } from "@/data/live-queries/organization";
 import { cn } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence } from "motion/react";
@@ -12,6 +15,10 @@ import { useState } from "react";
 
 export const Route = createFileRoute("/$org/team/$team/")({
   component: RouteComponent,
+  beforeLoad: async ({ params }) => {
+    const session = await getSessionFn();
+    return { session };
+  },
 });
 
 type DisplayMode = "kanban" | "list";
@@ -19,10 +26,26 @@ type DisplayMode = "kanban" | "list";
 function RouteComponent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [displayMode, setDisplayMode] = useState<DisplayMode>("list");
+  const { org, team } = Route.useParams();
+  const { session } = Route.useRouteContext();
+
+  const { data, isLoading, isError } = useTeamPage({
+    workspaceSlug: org,
+    teamKey: team,
+    userId: session.session.userId,
+  });
+
+  if (isError) {
+    return <div>Error loading team data</div>;
+  }
+
+  if (isLoading) {
+    return <div>Loading team data...</div>;
+  }
 
   return (
     <>
-      <AppSidebar />
+      <AppSidebar userId={session.session.userId} />
       <main className="flex flex-1 w-full flex-col h-screen overflow-hidden">
         <div className="flex flex-col h-full overflow-hidden">
           <HeaderBreadcrumb
@@ -42,7 +65,11 @@ function RouteComponent() {
                   isSidebarOpen && "mr-[380px] md:mr-[440px]",
                 )}
               >
-                {displayMode === "list" ? <ListView /> : <KanbanView />}
+                {displayMode === "list" ? (
+                  <pre>{JSON.stringify({ org, team, data }, null, 2)}</pre>
+                ) : (
+                  <KanbanView />
+                )}
               </div>
 
               <AnimatePresence mode="popLayout">
