@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { SidebarTrigger, useSidebar } from "../ui/sidebar";
 import { Button, buttonVariants } from "../ui/button";
 import { RightSidebarTrigger } from "./right-sidebar-trigger";
+import { ModeToggle } from "../ui/mode-toggle";
 
 interface HeaderBreadcrumbProps {
   showRightItems?: boolean;
@@ -82,6 +83,7 @@ export function HeaderBreadcrumb({
             open={isSidebarOpen}
             onClick={() => setIsSidebarOpen?.(!isSidebarOpen)}
           />
+          <ModeToggle />
         </div>
       )}
     </header>
