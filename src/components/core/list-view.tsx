@@ -7,7 +7,7 @@ import {
   PlannedIcon,
   ReviewingIcon,
 } from "./icons";
-import { P } from "./typography";
+import { P } from "../ui/typography";
 import { Button } from "../ui/button";
 
 const items = [
