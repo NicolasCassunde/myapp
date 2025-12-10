@@ -12,7 +12,14 @@ import { Button } from "../ui/button";
 import { useColumnsByTeamSlug } from "@/data/live-queries/list-columns";
 import { useTasksByTeamSlug } from "@/data/live-queries/list-tasks";
 
-// Tipos inferidos
+const columnIcons: Record<string, React.ElementType> = {
+  backlog: PendingIcon,
+  unstarted: PlannedIcon,
+  started: InProgressIcon,
+  completed: CompletedIcon,
+  closed: ClosedIcon,
+};
+
 type ColumnsType = NonNullable<ReturnType<typeof useColumnsByTeamSlug>["data"]>;
 type TasksType = NonNullable<ReturnType<typeof useTasksByTeamSlug>["data"]>;
 
@@ -29,6 +36,12 @@ export function KanbanView({ columns, tasks }: KanbanViewProps) {
           (task) => task.column_id === column.id,
         );
 
+        // pega o ícone baseado no tipo da coluna
+        const Icon =
+          (column.type &&
+            columnIcons[column.type as keyof typeof columnIcons]) ||
+          PendingIcon;
+
         return (
           <div
             key={column.id}
@@ -36,7 +49,12 @@ export function KanbanView({ columns, tasks }: KanbanViewProps) {
           >
             {/* Column Header */}
             <div className="flex items-center justify-between mb-3">
-              <Button size="sm" variant="ghost" className="flex items-center">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="flex items-center gap-1"
+              >
+                <Icon style={{ color: column.color || "inherit" }} />
                 <P className="font-medium">{column.name}</P>
                 <span className="text-xs text-muted-foreground">
                   ({columnTasks.length})
@@ -47,7 +65,7 @@ export function KanbanView({ columns, tasks }: KanbanViewProps) {
               </Button>
             </div>
 
-            {/* Tasks Column - Scrollable */}
+            {/* Tasks Column */}
             <div className="flex flex-col gap-2 overflow-y-auto pr-1">
               {columnTasks.map((task) => (
                 <div
