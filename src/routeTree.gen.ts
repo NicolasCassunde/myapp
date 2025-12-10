@@ -10,12 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthIndexRouteImport } from './routes/auth/index'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as OrgTeamTeamRouteRouteImport } from './routes/$org/team/$team/route'
 import { Route as OrgTeamTeamIndexRouteImport } from './routes/$org/team/$team/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/auth/',
+  path: '/auth/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrgTeamTeamRouteRoute = OrgTeamTeamRouteRouteImport.update({
@@ -31,30 +43,49 @@ const OrgTeamTeamIndexRoute = OrgTeamTeamIndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthIndexRoute
   '/$org/team/$team': typeof OrgTeamTeamRouteRouteWithChildren
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/$org/team/$team/': typeof OrgTeamTeamIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/$org/team/$team': typeof OrgTeamTeamIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth/': typeof AuthIndexRoute
   '/$org/team/$team': typeof OrgTeamTeamRouteRouteWithChildren
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/$org/team/$team/': typeof OrgTeamTeamIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$org/team/$team' | '/$org/team/$team/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/$org/team/$team'
+    | '/api/auth/$'
+    | '/$org/team/$team/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$org/team/$team'
-  id: '__root__' | '/' | '/$org/team/$team' | '/$org/team/$team/'
+  to: '/' | '/auth' | '/api/auth/$' | '/$org/team/$team'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth/'
+    | '/$org/team/$team'
+    | '/api/auth/$'
+    | '/$org/team/$team/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthIndexRoute: typeof AuthIndexRoute
   OrgTeamTeamRouteRoute: typeof OrgTeamTeamRouteRouteWithChildren
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -64,6 +95,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/': {
+      id: '/auth/'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$org/team/$team': {
@@ -96,7 +141,9 @@ const OrgTeamTeamRouteRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthIndexRoute: AuthIndexRoute,
   OrgTeamTeamRouteRoute: OrgTeamTeamRouteRouteWithChildren,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
