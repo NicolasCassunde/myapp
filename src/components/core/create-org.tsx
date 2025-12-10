@@ -6,6 +6,7 @@ import { useState } from "react";
 import { TextMorph } from "../ui/text-morph";
 import { Input } from "../ui/input";
 import { nanoid } from "nanoid";
+import { createOrganizationWithDefaults } from "@/lib/create-default-resources";
 
 const formSchema = z.object({
   name: z.string().min(1, "Workspace name is required"),
@@ -25,7 +26,7 @@ export function OrganizationForm({ userId }: { userId: string }) {
     onSubmit: async ({ value }) => {
       try {
         setIsSubmitting(true);
-        // create org e default resources (team, welcome task, etc)
+        await createOrganizationWithDefaults(value.name, userId);
       } catch (error) {
         console.error("Error creating organization:", error);
       } finally {

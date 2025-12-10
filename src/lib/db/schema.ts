@@ -1,4 +1,6 @@
-import { relations } from "drizzle-orm";
+import { InferSelectModel, relations } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
+
 import {
   pgTable,
   text,
@@ -7,6 +9,7 @@ import {
   index,
   integer,
   jsonb,
+  unique,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -213,7 +216,7 @@ export const task = pgTable(
   "task",
   {
     id: text("id").primaryKey(),
-    identifier: text("identifier").notNull().unique(), // e.g., "ENG-123"
+    identifier: text("identifier").notNull(), // e.g., "ENG-123" - removido .unique()
     title: text("title").notNull(),
     description: text("description"),
     priority: integer("priority").notNull().default(0), // 0=none, 1=urgent, 2=high, 3=medium, 4=low
@@ -249,6 +252,9 @@ export const task = pgTable(
     index("task_creatorId_idx").on(table.creatorId),
     index("task_parentTaskId_idx").on(table.parentTaskId),
     index("task_position_idx").on(table.position),
+    index("task_identifier_idx").on(table.identifier),
+    // Constraint única composta: identifier só precisa ser único dentro do mesmo team
+    unique("task_identifier_team_unique").on(table.teamId, table.identifier),
   ],
 );
 
@@ -418,3 +424,42 @@ export const taskLabelAssignmentRelations = relations(
     }),
   }),
 );
+
+export type User = InferSelectModel<typeof user>;
+export type Organization = InferSelectModel<typeof organization>;
+export type OrganizationUser = InferSelectModel<typeof organizationUser>;
+export type Workspace = InferSelectModel<typeof workspace>;
+export type Team = InferSelectModel<typeof team>;
+export type TeamMember = InferSelectModel<typeof teamMember>;
+export type Column = InferSelectModel<typeof column>;
+export type Task = InferSelectModel<typeof task>;
+export type TaskLabel = InferSelectModel<typeof taskLabel>;
+export type TaskLabelAssignment = InferSelectModel<typeof taskLabelAssignment>;
+
+// Zod Schemas para Insert
+export const insertUserSchema = createInsertSchema(user);
+export const insertOrganizationSchema = createInsertSchema(organization);
+export const insertOrganizationUserSchema =
+  createInsertSchema(organizationUser);
+export const insertWorkspaceSchema = createInsertSchema(workspace);
+export const insertTeamSchema = createInsertSchema(team);
+export const insertTeamMemberSchema = createInsertSchema(teamMember);
+export const insertColumnSchema = createInsertSchema(column);
+export const insertTaskSchema = createInsertSchema(task);
+export const insertTaskLabelSchema = createInsertSchema(taskLabel);
+export const insertTaskLabelAssignmentSchema =
+  createInsertSchema(taskLabelAssignment);
+
+// Zod Schemas para Select (opcional, caso precise)
+export const selectUserSchema = createInsertSchema(user);
+export const selectOrganizationSchema = createInsertSchema(organization);
+export const selectOrganizationUserSchema =
+  createInsertSchema(organizationUser);
+export const selectWorkspaceSchema = createInsertSchema(workspace);
+export const selectTeamSchema = createInsertSchema(team);
+export const selectTeamMemberSchema = createInsertSchema(teamMember);
+export const selectColumnSchema = createInsertSchema(column);
+export const selectTaskSchema = createInsertSchema(task);
+export const selectTaskLabelSchema = createInsertSchema(taskLabel);
+export const selectTaskLabelAssignmentSchema =
+  createInsertSchema(taskLabelAssignment);
