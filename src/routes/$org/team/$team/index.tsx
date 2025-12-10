@@ -6,6 +6,8 @@ import { KanbanView } from "@/components/core/kanban-view";
 import { ListView } from "@/components/core/list-view";
 import { RightSidebarContent } from "@/components/core/right-sidebar-content";
 import { getSessionFn } from "@/data/getSessionFn";
+import { useColumnsByTeamSlug } from "@/data/live-queries/list-columns";
+import { useTasksByTeamSlug } from "@/data/live-queries/list-tasks";
 
 import { useTeamPage } from "@/data/live-queries/organization";
 import { cn } from "@/lib/utils";
@@ -34,6 +36,23 @@ function RouteComponent() {
     teamKey: team,
     userId: session.session.userId,
   });
+
+  const { data: tasksData, isLoading: tasksIsLoading } = useTasksByTeamSlug({
+    teamSlug: team,
+  });
+
+  const { data: columnsData, isLoading: columnsIsLoading } =
+    useColumnsByTeamSlug({
+      teamSlug: team,
+    });
+
+  if (columnsIsLoading) {
+    return <div>Columns tasks data...</div>;
+  }
+
+  if (tasksIsLoading) {
+    return <div>Loading tasks data...</div>;
+  }
 
   if (isError) {
     return <div>Error loading team data</div>;
@@ -66,9 +85,9 @@ function RouteComponent() {
                 )}
               >
                 {displayMode === "list" ? (
-                  <pre>{JSON.stringify({ org, team, data }, null, 2)}</pre>
+                  <ListView columns={columnsData} tasks={tasksData} />
                 ) : (
-                  <KanbanView />
+                  <KanbanView columns={columnsData} tasks={tasksData} />
                 )}
               </div>
 
